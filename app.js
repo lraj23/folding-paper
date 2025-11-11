@@ -4,18 +4,20 @@ const lraj23UserId = "U0947SL6AKB";
 const lraj23BotTestingId = "C09GR27104V";
 const gPortfolioDmId = "C09GR27104V";
 const commands = {};
-const A4dimensions = [210, 297, 0.1];
+const zeroFoldDimensions = [210, 297, 0.1];
 const dimensions = n => {
-	const [a4w, a4h, a4t] = A4dimensions;
-	const factor = Math.pow(2, 2 - (n / 2));
-	const widthBetterRoundedParts = (a4w * Math.pow(2, 2 - ((n + n % 2) / 2))).toString().split(".");
-	const width = parseFloat((a4w * factor).toFixed(widthBetterRoundedParts.length === 1 ? 0 : widthBetterRoundedParts[1].length));
-	const heightBetterRoundedParts = (a4h * Math.pow(2, 2 - ((n + n % 2) / 2))).toString().split(".");
-	const height = parseFloat((a4h * factor).toFixed(heightBetterRoundedParts.length === 1 ? 0 : heightBetterRoundedParts[1].length));
-	const thickness = a4t * Math.pow(2, n - 4);
+	const [f0w, f0h, f0t] = zeroFoldDimensions;
+	const factor = Math.pow(0.5, n / 2);
+	const widthBetterRoundedParts = (f0w / Math.pow(2, Math.ceil(n / 2))).toString().split(".");
+	const width = parseFloat((f0w * factor).toFixed(widthBetterRoundedParts.length === 1 ? 0 : widthBetterRoundedParts[1].length));
+	const heightBetterRoundedParts = (f0h / Math.pow(2, Math.ceil(n / 2))).toString().split(".");
+	const height = parseFloat((f0h * factor).toFixed(heightBetterRoundedParts.length === 1 ? 0 : heightBetterRoundedParts[1].length));
+	const thickness = f0t * Math.pow(2, n);
 	return [width, height, thickness];
 }
-const dimensionsMin = n => [parseFloat((840 / Math.pow(2, n / 2)).toFixed((840 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (840 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), parseFloat((1188 / Math.pow(2, n / 2)).toFixed((1188 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (1188 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), 0.00625 * Math.pow(2, n)];
+const dimensionsMin = n => [parseFloat((210 / Math.pow(2, n / 2)).toFixed((210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), parseFloat((297 / Math.pow(2, n / 2)).toFixed((297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), 0.1 * Math.pow(2, n)];
+const surfaceArea = n => 2 * dimensions(n)[0] * dimensions(n)[1] + 2 * dimensions(n)[0] * dimensions(n)[2] + 2 * dimensions(n)[1] * dimensions(n)[2];
+const landArea = n => dimensions(n)[0] * dimensions(n)[1];
 
 app.message("", async () => { });
 
@@ -25,15 +27,15 @@ commands.paper = async ({ ack, body: { user_id: user }, respond }) => {
 	console.log(user, foldingPaper.folds);
 	if (user !== lraj23UserId) return await respond("Sorry, this is still in development...");
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
-	const dims = dimensions(foldingPaper.folds[user] + 4);
+	const folds = foldingPaper.folds[user];
 	await respond({
-		text: "Manipulate your piece of paper (you're at " + foldingPaper.folds[user] + " folds).",
+		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
 		blocks: [
 			{
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: "Manipulate your piece of paper (you're at " + foldingPaper.folds[user] + " folds)."
+					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
 				}
 			},
 			{
@@ -65,7 +67,7 @@ commands.paper = async ({ ack, body: { user_id: user }, respond }) => {
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: "*Stats:*\nDimensions: " + dims.map(dimension => "*" + dimension + " mm*").join(" x ") + "\nVolume: *6237 mm³* (this is constant)"
+					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
 				}
 			},
 			{
@@ -89,9 +91,141 @@ commands.paper = async ({ ack, body: { user_id: user }, respond }) => {
 }
 app.command("/folding-paper-paper", commands.paper);
 
-app.action("unfold", async ({ ack }) => await ack());
+app.action("unfold", async ({ ack, body: { user: { id: user } }, respond }) => {
+	await ack();
+	let foldingPaper = getFoldingPaper();
+	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
+	foldingPaper.folds[user]--;
+	const folds = foldingPaper.folds[user];
+	await respond({
+		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
+				}
+			},
+			{
+				type: "actions",
+				elements: [
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":heavy_minus_sign: Unfold",
+							emoji: true
+						},
+						value: "unfold",
+						action_id: "unfold"
+					},
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":heavy_plus_sign: Fold",
+							emoji: true
+						},
+						value: "fold",
+						action_id: "fold"
+					}
+				]
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
+				}
+			},
+			{
+				type: "actions",
+				elements: [
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":x: Close",
+							emoji: true
+						},
+						value: "cancel",
+						action_id: "cancel"
+					}
+				]
+			}
+		]
+	});
+	saveState(foldingPaper);
+});
 
-app.action("fold", async ({ ack }) => await ack());
+app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
+	await ack();
+	let foldingPaper = getFoldingPaper();
+	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
+	foldingPaper.folds[user]++;
+	const folds = foldingPaper.folds[user];
+	await respond({
+		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
+				}
+			},
+			{
+				type: "actions",
+				elements: [
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":heavy_minus_sign: Unfold",
+							emoji: true
+						},
+						value: "unfold",
+						action_id: "unfold"
+					},
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":heavy_plus_sign: Fold",
+							emoji: true
+						},
+						value: "fold",
+						action_id: "fold"
+					}
+				]
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
+				}
+			},
+			{
+				type: "actions",
+				elements: [
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: ":x: Close",
+							emoji: true
+						},
+						value: "cancel",
+						action_id: "cancel"
+					}
+				]
+			}
+		]
+	});
+	saveState(foldingPaper);
+});
 
 app.action(/^ignore-.+$/, async ({ ack }) => await ack());
 
