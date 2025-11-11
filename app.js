@@ -18,6 +18,95 @@ const dimensions = n => {
 const dimensionsMin = n => [parseFloat((210 / Math.pow(2, n / 2)).toFixed((210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), parseFloat((297 / Math.pow(2, n / 2)).toFixed((297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), 0.1 * Math.pow(2, n)];
 const surfaceArea = n => 2 * dimensions(n)[0] * dimensions(n)[1] + 2 * dimensions(n)[0] * dimensions(n)[2] + 2 * dimensions(n)[1] * dimensions(n)[2];
 const landArea = n => dimensions(n)[0] * dimensions(n)[1];
+const [mmInNm, mmInΜm, mmInMm, mmInCm, mmInM, mmInKm] = [
+	0.000001,
+	0.001,
+	1,
+	10,
+	1000,
+	1000000
+];
+const mmToString = mm => (mm <= 0 ? "0 mm" : (mm < mmInΜm ? (mm / mmInNm) + " nm" : (mm < mmInMm / 10 ? (mm / mmInΜm) + " μm" : (mm < 10 * mmInCm ? mm + " mm" : (mm < mmInM ? (mm / mmInCm) + " cm" : (mm < mmInKm ? (mm / mmInM) + " m" : (mm < 1000 * mmInKm ? (mm / mmInKm) + " km" : (mm / mmInKm).toFixed(0) + " km")))))));
+const mmToString2D = mm => (mm <= 0 ? "0 mm" : (mm < (mmInΜm ** 2) ? (mm / (mmInNm ** 2)) + " nm" : (mm < (mmInMm ** 2) / 10 ? (mm / (mmInΜm ** 2)) + " μm" : (mm < 10 * (mmInCm ** 2) ? mm + " mm" : (mm < (mmInM ** 2) ? (mm / (mmInCm ** 2)) + " cm" : (mm < (mmInKm ** 2) ? (mm / (mmInM ** 2)) + " m" : (mm < 1000 * (mmInKm ** 2) ? (mm / (mmInKm ** 2)) + " km" : (mm / (mmInKm ** 2)).toFixed(0) + " km"))))))) + "²";
+const mmToString3D = mm => (mm <= 0 ? "0 mm" : (mm < (mmInΜm ** 3) ? (mm / (mmInNm ** 3)) + " nm" : (mm < (mmInMm ** 3) / 10 ? (mm / (mmInΜm ** 3)) + " μm" : (mm < 10 * (mmInCm ** 3) ? mm + " mm" : (mm < (mmInM ** 3) ? (mm / (mmInCm ** 3)) + " cm" : (mm < (mmInKm ** 3) ? (mm / (mmInM ** 3)) + " m" : (mm < 1000 * (mmInKm ** 3) ? (mm / (mmInKm ** 3)) + " km" : (mm / (mmInKm ** 3)).toFixed(0) + " km"))))))) + "³";
+const blocks = folds => [
+	{
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: "Manipulate your piece of paper (you're at " + folds + " fold(s))."
+		}
+	},
+	{
+		type: "actions",
+		elements: (folds >= 75 ? [
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":heavy_minus_sign: Unfold",
+					emoji: true
+				},
+				value: "unfold",
+				action_id: "unfold"
+			}
+		] : (folds <= -36 ? [
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":heavy_plus_sign: Fold",
+					emoji: true
+				},
+				value: "fold",
+				action_id: "fold"
+			}
+		] : [
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":heavy_minus_sign: Unfold",
+					emoji: true
+				},
+				value: "unfold",
+				action_id: "unfold"
+			},
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":heavy_plus_sign: Fold",
+					emoji: true
+				},
+				value: "fold",
+				action_id: "fold"
+			}
+		]))
+	},
+	{
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + mmToString(dimension) + "*").join(" x ") + "\nSPACE on top of paper: *" + mmToString2D(landArea(folds)) + "*\nTotal Surface Area: *" + mmToString2D(surfaceArea(folds)) + "*\nVolume: *" + mmToString3D(6237) + "* (this is constant)"
+		}
+	},
+	{
+		type: "actions",
+		elements: [
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":x: Close",
+					emoji: true
+				},
+				value: "cancel",
+				action_id: "cancel"
+			}
+		]
+	}
+];
 
 app.message("", async () => { });
 
@@ -25,67 +114,11 @@ commands.paper = async ({ ack, body: { user_id: user }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	console.log(user, foldingPaper.folds);
-	if (user !== lraj23UserId) return await respond("Sorry, this is still in development...");
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
 	const folds = foldingPaper.folds[user];
 	await respond({
-		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
-		blocks: [
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_minus_sign: Unfold",
-							emoji: true
-						},
-						value: "unfold",
-						action_id: "unfold"
-					},
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_plus_sign: Fold",
-							emoji: true
-						},
-						value: "fold",
-						action_id: "fold"
-					}
-				]
-			},
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":x: Close",
-							emoji: true
-						},
-						value: "cancel",
-						action_id: "cancel"
-					}
-				]
-			}
-		]
+		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
+		blocks: blocks(folds)
 	});
 	saveState(foldingPaper);
 }
@@ -95,66 +128,11 @@ app.action("unfold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
-	foldingPaper.folds[user]--;
+	if (foldingPaper.folds[user] > -36) foldingPaper.folds[user]--;
 	const folds = foldingPaper.folds[user];
 	await respond({
-		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
-		blocks: [
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_minus_sign: Unfold",
-							emoji: true
-						},
-						value: "unfold",
-						action_id: "unfold"
-					},
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_plus_sign: Fold",
-							emoji: true
-						},
-						value: "fold",
-						action_id: "fold"
-					}
-				]
-			},
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":x: Close",
-							emoji: true
-						},
-						value: "cancel",
-						action_id: "cancel"
-					}
-				]
-			}
-		]
+		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
+		blocks: blocks(folds)
 	});
 	saveState(foldingPaper);
 });
@@ -163,66 +141,11 @@ app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
-	foldingPaper.folds[user]++;
+	if (foldingPaper.folds[user] < 75) foldingPaper.folds[user]++;
 	const folds = foldingPaper.folds[user];
 	await respond({
-		text: "Manipulate your piece of paper (you're at " + folds + " folds).",
-		blocks: [
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "Manipulate your piece of paper (you're at " + folds + " folds)."
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_minus_sign: Unfold",
-							emoji: true
-						},
-						value: "unfold",
-						action_id: "unfold"
-					},
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":heavy_plus_sign: Fold",
-							emoji: true
-						},
-						value: "fold",
-						action_id: "fold"
-					}
-				]
-			},
-			{
-				type: "section",
-				text: {
-					type: "mrkdwn",
-					text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + dimension + " mm*").join(" x ") + "\nSPACE on top of paper: *" + landArea(folds) + " mm²*\nTotal Surface Area: *" + surfaceArea(folds) + " mm²*\nVolume: *6237 mm³* (this is constant)"
-				}
-			},
-			{
-				type: "actions",
-				elements: [
-					{
-						type: "button",
-						text: {
-							type: "plain_text",
-							text: ":x: Close",
-							emoji: true
-						},
-						value: "cancel",
-						action_id: "cancel"
-					}
-				]
-			}
-		]
+		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
+		blocks: blocks(folds)
 	});
 	saveState(foldingPaper);
 });
