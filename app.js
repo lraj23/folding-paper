@@ -1,5 +1,6 @@
 import app from "./client.js";
 import { getFoldingPaper, saveState } from "./datahandler.js";
+import { foldsInfo } from "./foldsInfo.js";
 const lraj23UserId = "U0947SL6AKB";
 const lraj23BotTestingId = "C09GR27104V";
 const gPortfolioDmId = "C09GR27104V";
@@ -14,7 +15,7 @@ const dimensions = n => {
 	const height = parseFloat((f0h * factor).toFixed(heightBetterRoundedParts.length === 1 ? 0 : heightBetterRoundedParts[1].length));
 	const thickness = f0t * Math.pow(2, n);
 	return [width, height, thickness];
-}
+};
 const dimensionsMin = n => [parseFloat((210 / Math.pow(2, n / 2)).toFixed((210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (210 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), parseFloat((297 / Math.pow(2, n / 2)).toFixed((297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".").length === 1 ? 0 : (297 / Math.pow(2, Math.ceil(n / 2))).toString().split(".")[1].length)), 0.1 * Math.pow(2, n)];
 const surfaceArea = n => 2 * dimensions(n)[0] * dimensions(n)[1] + 2 * dimensions(n)[0] * dimensions(n)[2] + 2 * dimensions(n)[1] * dimensions(n)[2];
 const landArea = n => dimensions(n)[0] * dimensions(n)[1];
@@ -90,6 +91,21 @@ const blocks = folds => [
 			type: "mrkdwn",
 			text: "*Stats:*\nDimensions: " + dimensions(folds).map(dimension => "*" + mmToString(dimension) + "*").join(" x ") + "\nSPACE on top of paper: *" + mmToString2D(landArea(folds)) + "*\nTotal Surface Area: *" + mmToString2D(surfaceArea(folds)) + "*\nVolume: *" + mmToString3D(6237) + "* (this is constant)"
 		}
+	},
+	{
+		type: "divider"
+	},
+	{ 
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: "The SPACE (yeah, I know) on top of your piece of paper is *" + mmToString2D(landArea(folds)) + "*. On this amount of SPACE, you could fit " + (foldsInfo[folds.toString()] ? foldsInfo[folds.toString()][0] : "something, nobody really knows what (more like I couldn't find anything that made sense, or I haven't researched enough yet, most likely the latter for obvious reasons). What do you know?")
+		},
+	},
+	{
+		type: "image",
+		image_url: foldsInfo[folds.toString()] ? foldsInfo[folds.toString()][1] : "https://blog.lipsumhub.com/wp-content/uploads/2024/07/lorem-ipsum-meaning-in-english-lipsumhub.jpg",
+		alt_text: foldsInfo[folds.toString()] ? foldsInfo[folds.toString()][2] : "Lorem Ipsum dolor sit amet, consectetur adipisicing..."
 	},
 	{
 		type: "actions",

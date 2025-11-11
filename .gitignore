@@ -1,7 +1,7 @@
-# node / npm
 node_modules/
 package-lock.json
 .env
 *.log
 foldingpaper.json
+foldsInfo.js
 brainstorm.md
