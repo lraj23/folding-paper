@@ -70,12 +70,92 @@ app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	saveState(foldingPaper);
 });
 
+app.action(/^request-paper-.+$/, async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id } }) => [await ack(), await app.client.views.open({
+	trigger_id,
+	view: {
+		type: "modal",
+		callback_id: "confirm-request-paper-" + value,
+		title: {
+			type: "plain_text",
+			text: "/paper #" + value
+		},
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Request to add information for */folding-paper-paper*  on *" + value + "* fold(s)."
+				}
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-paper-item"
+				},
+				label: {
+					type: "plain_text",
+					text: "Name of the object",
+					emoji: true
+				},
+				optional: false
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-paper-image",
+					placeholder: {
+						type: "plain_text",
+						text: "Can be stolen from the internet!"
+					}
+				},
+				label: {
+					type: "plain_text",
+					text: "A link for the image",
+					emoji: true
+				},
+				optional: false
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-paper-details",
+					placeholder: {
+						type: "plain_text",
+						text: "Optional"
+					}
+				},
+				label: {
+					type: "plain_text",
+					text: "Any extra information, like an explanation?",
+					emoji: true
+				},
+				optional: true
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Opened in <#" + channel + "> by <@" + user + ">"
+				}
+			}
+		],
+		submit: {
+			type: "plain_text",
+			text: ":ballot:  Submit Request"
+		}
+	}
+})]);
+
+app.view(/^confirm-request-paper-.+$/, async ({ ack }) => await ack());
+
 commands.space = async ({ ack, body: { user_id }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	if (!foldingPaper.folds[user_id]) foldingPaper.folds[user_id] = 0;
 	const folds = foldingPaper.folds[user_id];
-	console.log(blocks.space(folds));
 	await respond({
 		text: "Manipulate your piece of paper (you're at " + folds + " folds(s)).",
 		blocks: blocks.space(folds)
@@ -108,6 +188,87 @@ app.action("fold-space", async ({ ack, body: { user: { id: user } }, respond }) 
 	});
 	saveState(foldingPaper);
 });
+
+app.action(/^request-space-.+$/, async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id } }) => [await ack(), await app.client.views.open({
+	trigger_id,
+	view: {
+		type: "modal",
+		callback_id: "confirm-request-space-" + value,
+		title: {
+			type: "plain_text",
+			text: "/space #" + value
+		},
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Request to add information for */folding-paper-space* on *" + value + "* fold(s)."
+				}
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-space-item"
+				},
+				label: {
+					type: "plain_text",
+					text: "Name of the object",
+					emoji: true
+				},
+				optional: false
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-space-image",
+					placeholder: {
+						type: "plain_text",
+						text: "Can be stolen from the internet!"
+					}
+				},
+				label: {
+					type: "plain_text",
+					text: "A link for the image",
+					emoji: true
+				},
+				optional: false
+			},
+			{
+				type: "input",
+				element: {
+					type: "plain_text_input",
+					action_id: "ignore-request-space-details",
+					placeholder: {
+						type: "plain_text",
+						text: "Optional"
+					}
+				},
+				label: {
+					type: "plain_text",
+					text: "Any extra information, like an explanation?",
+					emoji: true
+				},
+				optional: true
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "Opened in <#" + channel + "> by <@" + user + ">"
+				}
+			}
+		],
+		submit: {
+			type: "plain_text",
+			text: ":ballot:  Submit Request"
+		}
+	}
+})]);
+
+app.view(/^confirm-request-space-.+$/, async ({ ack }) => await ack());
 
 app.action(/^ignore-.+$/, async ({ ack }) => await ack());
 

@@ -108,6 +108,16 @@ blocks.paper = folds => [
 				},
 				value: "cancel",
 				action_id: "cancel"
+			},
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":ballot: Submit Request",
+					emoji: true
+				},
+				value: folds.toString(),
+				action_id: "request-paper-" + folds
 			}
 		]
 	}
@@ -202,6 +212,16 @@ blocks.space = folds => [
 				},
 				value: "cancel",
 				action_id: "cancel"
+			},
+			{
+				type: "button",
+				text: {
+					type: "plain_text",
+					text: ":ballot: Submit Request",
+					emoji: true
+				},
+				value: folds.toString(),
+				action_id: "request-space-" + folds
 			}
 		]
 	}
