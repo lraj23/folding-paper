@@ -1,6 +1,7 @@
 import app from "./client.js";
 import { getFoldingPaper, saveState } from "./datahandler.js";
-import blocks from "./blocks.js";
+import { blocks, dimensionsMin, mmToString, landArea, mmToString2D } from "./blocks.js";
+import {demons} from "./somewheredangerous.js";
 const lraj23UserId = "U0947SL6AKB";
 const lraj23BotTestingId = "C09GR27104V";
 const gPortfolioDmId = "D09SN86RFC1";
@@ -70,7 +71,7 @@ app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	saveState(foldingPaper);
 });
 
-app.action(/^request-paper-.+$/, async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id } }) => [await ack(), await app.client.views.open({
+const requestPaper = async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id }, msg }) => [await ack(), await app.client.views.open({
 	trigger_id,
 	view: {
 		type: "modal",
@@ -138,7 +139,7 @@ app.action(/^request-paper-.+$/, async ({ ack, action: { value }, body: { user: 
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: "Opened in <#" + channel + "> by <@" + user + ">"
+					text: "Opened in <#" + channel + "> by <@" + user + ">" + (msg ? "\n\n*_" + msg + "_*" : "")
 				}
 			}
 		],
@@ -147,9 +148,53 @@ app.action(/^request-paper-.+$/, async ({ ack, action: { value }, body: { user: 
 			text: ":ballot:  Submit Request"
 		}
 	}
-})]);
+})];
+app.action(/^request-paper-.+$/, requestPaper);
 
-app.view(/^confirm-request-paper-.+$/, async ({ ack }) => await ack());
+app.view(/^confirm-request-paper-.+$/, async ({ ack, view: { state: { values } }, body: { user: { id: user }, view: { blocks: [{ text: { text: foldsMeta } }, , , , { text: { text: meta } }] }, trigger_id } }) => {
+	await ack();
+	let foldingPaper = getFoldingPaper();
+	const value = foldsMeta.split("on *")[1].split("*")[0];
+	const name = Object.entries(values).find(info => info[1]["ignore-request-paper-item"])[1]["ignore-request-paper-item"].value;
+	const imgUrl = Object.entries(values).find(info => info[1]["ignore-request-paper-image"])[1]["ignore-request-paper-image"].value;
+	const additional = Object.entries(values).find(info => info[1]["ignore-request-paper-details"])[1]["ignore-request-paper-details"].value || "";
+	const channel = meta.split("<#")[1].split(">")[0];
+	const warn = async msg => await requestPaper({
+		ack: _ => _,
+		action: { value },
+		body: {
+			user: { id: user },
+			channel: { id: channel },
+			trigger_id
+		},
+		msg
+	});
+	console.log(value, name, imgUrl, additional, user, channel);
+
+	if (!value) return await warn("WHAT");
+	foldingPaper.requests.push({ name, imgUrl, additional });
+	await app.client.chat.postMessage({
+		channel: lraj23BotTestingId,
+		text: "<@" + lraj23UserId + "> You have a new suggestion!",
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "<@" + lraj23UserId + "> You have a new suggestion!"
+				}
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "*<@" + user + ">* suggested that, after *" + value + "* folds, *" + name + "* would fit on *" + mmToString2D(landArea(parseInt(value))) + "*.\n\n\nThey provided this image link: " + imgUrl + (additional ? "\n\n\nThey also provided this extra note: *" + additional + "*" : "")
+				}
+			}
+		]
+	});
+	saveState(foldingPaper);
+});
 
 commands.space = async ({ ack, body: { user_id }, respond }) => {
 	await ack();
@@ -189,7 +234,7 @@ app.action("fold-space", async ({ ack, body: { user: { id: user } }, respond }) 
 	saveState(foldingPaper);
 });
 
-app.action(/^request-space-.+$/, async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id } }) => [await ack(), await app.client.views.open({
+const requestSpace = async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id }, msg }) => [await ack(), await app.client.views.open({
 	trigger_id,
 	view: {
 		type: "modal",
@@ -257,7 +302,7 @@ app.action(/^request-space-.+$/, async ({ ack, action: { value }, body: { user: 
 				type: "section",
 				text: {
 					type: "mrkdwn",
-					text: "Opened in <#" + channel + "> by <@" + user + ">"
+					text: "Opened in <#" + channel + "> by <@" + user + ">" + (msg ? "\n\n*_" + msg + "_*" : "")
 				}
 			}
 		],
@@ -266,8 +311,53 @@ app.action(/^request-space-.+$/, async ({ ack, action: { value }, body: { user: 
 			text: ":ballot:  Submit Request"
 		}
 	}
-})]);
+})];
+app.action(/^request-space-.+$/, requestSpace);
 
+app.view(/^confirm-request-space-.+$/, async ({ ack, view: { state: { values } }, body: { user: { id: user }, view: { blocks: [{ text: { text: foldsMeta } }, , , , { text: { text: meta } }] }, trigger_id } }) => {
+	await ack();
+	let foldingPaper = getFoldingPaper();
+	const value = foldsMeta.split("on *")[1].split("*")[0];
+	const name = Object.entries(values).find(info => info[1]["ignore-request-space-item"])[1]["ignore-request-space-item"].value;
+	const imgUrl = Object.entries(values).find(info => info[1]["ignore-request-space-image"])[1]["ignore-request-space-image"].value;
+	const additional = Object.entries(values).find(info => info[1]["ignore-request-space-details"])[1]["ignore-request-space-details"].value || "";
+	const channel = meta.split("<#")[1].split(">")[0];
+	const warn = async msg => await requestSpace({
+		ack: _ => _,
+		action: { value },
+		body: {
+			user: { id: user },
+			channel: { id: channel },
+			trigger_id
+		},
+		msg
+	});
+	console.log(value, name, imgUrl, additional, user, channel);
+
+	if (!value) return await warn("WHAT");
+	foldingPaper.requests.push({ name, imgUrl, additional });
+	await app.client.chat.postMessage({
+		channel: lraj23BotTestingId,
+		text: "<@" + lraj23UserId + "> You have a new suggestion!",
+		blocks: [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "<@" + lraj23UserId + "> You have a new suggestion!"
+				}
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: "*<@" + user + ">* suggested that, after *" + value + "* folds, the thickness of a piece of paper, which is *" + mmToString(dimensionsMin(parseInt(value))[2]) + "*, would fit *" + name + "*.\n\n\nThey provided this image link: " + imgUrl + (additional ? "\n\n\nThey also provided this extra note: *" + additional + "*" : "")
+				}
+			}
+		]
+	});
+	saveState(foldingPaper);
+});
 app.view(/^confirm-request-space-.+$/, async ({ ack }) => await ack());
 
 app.action(/^ignore-.+$/, async ({ ack }) => await ack());

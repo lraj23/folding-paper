@@ -227,4 +227,12 @@ blocks.space = folds => [
 	}
 ];
 
-export default blocks;
+export {
+	blocks,
+	dimensionsMin,
+	surfaceArea,
+	landArea,
+	mmToString,
+	mmToString2D,
+	mmToString3D
+};
