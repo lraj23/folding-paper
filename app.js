@@ -1,7 +1,6 @@
 import app from "./client.js";
 import { getFoldingPaper, saveState } from "./datahandler.js";
 import { blocks, dimensionsMin, mmToString, landArea, mmToString2D } from "./blocks.js";
-import {demons} from "./somewheredangerous.js";
 const lraj23UserId = "U0947SL6AKB";
 const lraj23BotTestingId = "C09GR27104V";
 const gPortfolioDmId = "D09SN86RFC1";
@@ -45,7 +44,7 @@ commands.paper = async ({ ack, body: { user_id: user }, respond }) => {
 }
 app.command("/folding-paper-paper", commands.paper);
 
-app.action("unfold", async ({ ack, body: { user: { id: user } }, respond }) => {
+app.action(/^unfold-.+$/, async ({ ack, action: { value }, body: { user: { id: user } }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
@@ -53,12 +52,12 @@ app.action("unfold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	const folds = foldingPaper.folds[user];
 	await respond({
 		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
-		blocks: blocks.paper(folds)
+		blocks: blocks[value.split("unfold-")[1]](folds)
 	});
 	saveState(foldingPaper);
 });
 
-app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
+app.action(/^fold-.+$/, async ({ ack, action: { value }, body: { user: { id: user } }, respond }) => {
 	await ack();
 	let foldingPaper = getFoldingPaper();
 	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
@@ -66,7 +65,7 @@ app.action("fold", async ({ ack, body: { user: { id: user } }, respond }) => {
 	const folds = foldingPaper.folds[user];
 	await respond({
 		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
-		blocks: blocks.paper(folds)
+		blocks: blocks[value.split("fold-")[1]](folds)
 	});
 	saveState(foldingPaper);
 });
@@ -88,53 +87,7 @@ const requestPaper = async ({ ack, action: { value }, body: { user: { id: user }
 					text: "Request to add information for */folding-paper-paper*  on *" + value + "* fold(s)."
 				}
 			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-paper-item"
-				},
-				label: {
-					type: "plain_text",
-					text: "Name of the object",
-					emoji: true
-				},
-				optional: false
-			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-paper-image",
-					placeholder: {
-						type: "plain_text",
-						text: "Can be stolen from the internet!"
-					}
-				},
-				label: {
-					type: "plain_text",
-					text: "A link for the image",
-					emoji: true
-				},
-				optional: false
-			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-paper-details",
-					placeholder: {
-						type: "plain_text",
-						text: "Optional"
-					}
-				},
-				label: {
-					type: "plain_text",
-					text: "Any extra information, like an explanation?",
-					emoji: true
-				},
-				optional: true
-			},
+			...blocks.requestModal("paper"),
 			{
 				type: "section",
 				text: {
@@ -208,32 +161,6 @@ commands.space = async ({ ack, body: { user_id }, respond }) => {
 };
 app.command("/folding-paper-space", commands.space);
 
-app.action("unfold-space", async ({ ack, body: { user: { id: user } }, respond }) => {
-	await ack();
-	let foldingPaper = getFoldingPaper();
-	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
-	if (foldingPaper.folds[user] > -36) foldingPaper.folds[user]--;
-	const folds = foldingPaper.folds[user];
-	await respond({
-		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
-		blocks: blocks.space(folds)
-	});
-	saveState(foldingPaper);
-});
-
-app.action("fold-space", async ({ ack, body: { user: { id: user } }, respond }) => {
-	await ack();
-	let foldingPaper = getFoldingPaper();
-	if (!foldingPaper.folds[user]) foldingPaper.folds[user] = 0;
-	if (foldingPaper.folds[user] < 75) foldingPaper.folds[user]++;
-	const folds = foldingPaper.folds[user];
-	await respond({
-		text: "Manipulate your piece of paper (you're at " + folds + " fold(s)).",
-		blocks: blocks.space(folds)
-	});
-	saveState(foldingPaper);
-});
-
 const requestSpace = async ({ ack, action: { value }, body: { user: { id: user }, channel: { id: channel }, trigger_id }, msg }) => [await ack(), await app.client.views.open({
 	trigger_id,
 	view: {
@@ -251,53 +178,7 @@ const requestSpace = async ({ ack, action: { value }, body: { user: { id: user }
 					text: "Request to add information for */folding-paper-space* on *" + value + "* fold(s)."
 				}
 			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-space-item"
-				},
-				label: {
-					type: "plain_text",
-					text: "Name of the object",
-					emoji: true
-				},
-				optional: false
-			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-space-image",
-					placeholder: {
-						type: "plain_text",
-						text: "Can be stolen from the internet!"
-					}
-				},
-				label: {
-					type: "plain_text",
-					text: "A link for the image",
-					emoji: true
-				},
-				optional: false
-			},
-			{
-				type: "input",
-				element: {
-					type: "plain_text_input",
-					action_id: "ignore-request-space-details",
-					placeholder: {
-						type: "plain_text",
-						text: "Optional"
-					}
-				},
-				label: {
-					type: "plain_text",
-					text: "Any extra information, like an explanation?",
-					emoji: true
-				},
-				optional: true
-			},
+			...blocks.requestModal("space"),
 			{
 				type: "section",
 				text: {
@@ -366,7 +247,7 @@ app.action("cancel", async ({ ack, respond }) => [await ack(), await respond({ d
 
 app.action("confirm", async ({ ack }) => await ack());
 
-commands.help = async ({ ack, respond, body: { user_id } }) => [await ack(), await respond("This is the Folding Paper bot! It lets you fold paper while learning about the surface area, volume, etc. _More information will be added eventually..._\nFor more information, check out the readme at https://github.com/lraj23/folding-paper."), user_id === lraj23UserId ? await respond("Test but only for <@" + lraj23UserId + ">. If you aren't him and you see this message, DM him IMMEDIATELY about this!") : null];
+commands.help = async ({ ack, respond, body: { user_id } }) => [await ack(), await respond("This is the Folding Paper bot! It lets you fold paper while learning about the surface area, volume, etc. You also receive an example of what kinds of things can fit in a certain amount of SPACE, as well as submit requests for missing information.\nFor more information, check out the readme at https://github.com/lraj23/folding-paper."), user_id === lraj23UserId ? await respond("Test but only for <@" + lraj23UserId + ">. If you aren't him and you see this message, DM him IMMEDIATELY about this!") : null];
 app.command("/folding-paper-help", commands.help);
 
 app.message(/secret button/i, async ({ message: { channel, user, thread_ts, ts } }) => await app.client.chat.postEphemeral({

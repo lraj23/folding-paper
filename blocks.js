@@ -37,8 +37,8 @@ blocks.paper = folds => [
 					text: ":heavy_minus_sign: Unfold",
 					emoji: true
 				},
-				value: "unfold",
-				action_id: "unfold"
+				value: "unfold-paper",
+				action_id: "unfold-paper"
 			}
 		] : (folds <= -36 ? [
 			{
@@ -48,8 +48,8 @@ blocks.paper = folds => [
 					text: ":heavy_plus_sign: Fold",
 					emoji: true
 				},
-				value: "fold",
-				action_id: "fold"
+				value: "fold-paper",
+				action_id: "fold-paper"
 			}
 		] : [
 			{
@@ -59,8 +59,8 @@ blocks.paper = folds => [
 					text: ":heavy_minus_sign: Unfold",
 					emoji: true
 				},
-				value: "unfold",
-				action_id: "unfold"
+				value: "unfold-paper",
+				action_id: "unfold-paper"
 			},
 			{
 				type: "button",
@@ -69,8 +69,8 @@ blocks.paper = folds => [
 					text: ":heavy_plus_sign: Fold",
 					emoji: true
 				},
-				value: "fold",
-				action_id: "fold"
+				value: "fold-paper",
+				action_id: "fold-paper"
 			}
 		]))
 	},
@@ -224,6 +224,56 @@ blocks.space = folds => [
 				action_id: "request-space-" + folds
 			}
 		]
+	}
+];
+
+blocks.requestModal = type => [
+	{
+		type: "input",
+		element: {
+			type: "plain_text_input",
+			action_id: "ignore-request-" + type + "-item"
+		},
+		label: {
+			type: "plain_text",
+			text: "Name of the object",
+			emoji: true
+		},
+		optional: false
+	},
+	{
+		type: "input",
+		element: {
+			type: "plain_text_input",
+			action_id: "ignore-request-" + type + "-image",
+			placeholder: {
+				type: "plain_text",
+				text: "Can be stolen from the internet!"
+			}
+		},
+		label: {
+			type: "plain_text",
+			text: "A link for the image",
+			emoji: true
+		},
+		optional: false
+	},
+	{
+		type: "input",
+		element: {
+			type: "plain_text_input",
+			action_id: "ignore-request-" + type + "-details",
+			placeholder: {
+				type: "plain_text",
+				text: "Optional"
+			}
+		},
+		label: {
+			type: "plain_text",
+			text: "Any extra information, like an explanation?",
+			emoji: true
+		},
+		optional: true
 	}
 ];
 
